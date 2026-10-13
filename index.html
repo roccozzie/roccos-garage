@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Rocco's Garage</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --page-bg: #8fd4ff;
+        --rack-bg: #ffb340;
+        --rack-edge: #e08e1b;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root { --page-bg: #1d3a5f; }
+      }
+      * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: "Baloo 2", "Comic Sans MS", "Chalkboard SE", system-ui, sans-serif;
+        background: var(--page-bg);
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+      }
+      #app {
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+      #stage {
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      #scene {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      #fx {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .fly-tire {
+        position: absolute;
+        pointer-events: none;
+        will-change: transform;
+        z-index: 5;
+      }
+      .confetti {
+        position: absolute;
+        top: -20px;
+        pointer-events: none;
+        border-radius: 3px;
+        z-index: 6;
+      }
+      .spark {
+        position: absolute;
+        pointer-events: none;
+        z-index: 6;
+        font-size: 26px;
+        line-height: 1;
+      }
+      #yay {
+        position: absolute;
+        left: 50%;
+        top: 34%;
+        transform: translate(-50%, -50%) scale(0);
+        z-index: 7;
+        pointer-events: none;
+        font-weight: 800;
+        font-size: clamp(56px, 14vw, 130px);
+        color: #ffcf3f;
+        -webkit-text-stroke: 3px #e2571e;
+        text-shadow: 0 6px 0 #e2571e, 0 12px 24px rgba(0,0,0,.25);
+        letter-spacing: 2px;
+      }
+      /* Tire rack */
+      #rack {
+        flex: 0 0 auto;
+        background: linear-gradient(180deg, var(--rack-bg), #ff9d1c);
+        border-top: 6px solid var(--rack-edge);
+        padding: 10px 8px calc(12px + env(safe-area-inset-bottom));
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: clamp(8px, 2.5vw, 22px);
+        box-shadow: 0 -6px 18px rgba(0,0,0,.18);
+        z-index: 10;
+      }
+      .rack-btn {
+        appearance: none;
+        border: none;
+        background: #fff7e8;
+        border-radius: 50%;
+        width: clamp(72px, 17vw, 118px);
+        height: clamp(72px, 17vw, 118px);
+        padding: 7px;
+        cursor: pointer;
+        box-shadow: 0 5px 0 #d98a16, 0 9px 16px rgba(0,0,0,.22);
+        touch-action: none;
+        position: relative;
+      }
+      .rack-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #d98a16, 0 5px 10px rgba(0,0,0,.22); }
+      .rack-btn svg { width: 100%; height: 100%; display: block; pointer-events: none; }
+      .rack-btn.empty-slot { opacity: .35; }
+      /* SVG helpers */
+      .tireG { transform-box: fill-box; transform-origin: center; }
+      .spin { animation: spin .5s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .hub-ring { animation: hubPulse 1s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      @keyframes hubPulse { 0%,100% { transform: scale(1); opacity:.9; } 50% { transform: scale(1.18); opacity:.5; } }
+      .wiggle-hint { animation: wiggleHint .7s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      @keyframes wiggleHint { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(-9deg); } 75% { transform: rotate(9deg); } }
+      .cloud { animation: drift 26s linear infinite alternate; }
+      @keyframes drift { from { transform: translateX(-14px); } to { transform: translateX(20px); } }
+      @media (prefers-reduced-motion: reduce) {
+        .cloud, .hub-ring, .wiggle-hint { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="stage">
+        <svg id="scene" viewBox="0 0 900 640" preserveAspectRatio="xMidYMid meet" aria-label="Rocco's Garage game">
+          <!-- sky -->
+          <rect x="0" y="0" width="900" height="640" fill="#8fd4ff"/>
+          <g id="sun" style="cursor:pointer">
+            <circle cx="806" cy="66" r="40" fill="#ffd93f"/>
+            <g stroke="#ffd93f" stroke-width="7" stroke-linecap="round">
+              <line x1="806" y1="8" x2="806" y2="22"/>
+              <line x1="806" y1="110" x2="806" y2="124"/>
+              <line x1="748" y1="66" x2="762" y2="66"/>
+              <line x1="850" y1="66" x2="864" y2="66"/>
+              <line x1="765" y1="25" x2="775" y2="35"/>
+              <line x1="837" y1="97" x2="847" y2="107"/>
+              <line x1="847" y1="25" x2="837" y2="35"/>
+              <line x1="775" y1="97" x2="765" y2="107"/>
+            </g>
+            <circle cx="792" cy="60" r="5" fill="#e8a812"/>
+            <circle cx="820" cy="60" r="5" fill="#e8a812"/>
+            <path d="M 790 76 Q 806 90 822 76" stroke="#e8a812" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <circle cx="806" cy="66" r="58" fill="transparent"/>
+          </g>
+          <g class="cloud" fill="#ffffff" opacity=".95">
+            <ellipse cx="130" cy="70" rx="52" ry="24"/>
+            <ellipse cx="168" cy="56" rx="38" ry="22"/>
+            <ellipse cx="96" cy="56" rx="30" ry="18"/>
+          </g>
+          <g class="cloud" fill="#ffffff" opacity=".9" style="animation-duration:34s">
+            <ellipse cx="620" cy="48" rx="44" ry="20"/>
+            <ellipse cx="652" cy="36" rx="30" ry="17"/>
+          </g>
+
+          <!-- garage building -->
+          <rect x="46" y="150" width="808" height="392" rx="18" fill="#ff8a5c"/>
+          <rect x="46" y="150" width="808" height="34" fill="#f2743c"/>
+          <!-- roof -->
+          <path d="M 20 158 L 450 44 L 880 158 Z" fill="#e2571e"/>
+          <path d="M 20 158 L 450 44 L 880 158 L 852 158 L 450 66 L 48 158 Z" fill="#c74312" opacity=".55"/>
+          <!-- sign -->
+          <g id="sign" style="cursor:pointer">
+            <rect x="196" y="86" width="508" height="86" rx="43" fill="#fff7e8" stroke="#e2571e" stroke-width="7"/>
+            <text x="450" y="147" text-anchor="middle" font-family="'Baloo 2','Comic Sans MS',sans-serif" font-weight="800" font-size="52" fill="#e2571e" letter-spacing="1">ROCCO'S GARAGE</text>
+            <g id="bulbs" fill="#ffd93f">
+              <circle cx="228" cy="106" r="7"/><circle cx="228" cy="152" r="7"/>
+              <circle cx="672" cy="106" r="7"/><circle cx="672" cy="152" r="7"/>
+              <circle cx="450" cy="97" r="7"/>
+            </g>
+            <rect x="196" y="86" width="508" height="86" rx="43" fill="transparent"/>
+          </g>
+          <!-- door opening -->
+          <rect x="120" y="196" width="660" height="346" rx="14" fill="#5b4636"/>
+          <rect x="120" y="196" width="660" height="346" rx="14" fill="url(#doorShade)"/>
+          <defs>
+            <radialGradient id="doorShade" cx="50%" cy="38%" r="80%">
+              <stop offset="0%" stop-color="#8a6f55"/>
+              <stop offset="70%" stop-color="#6b5540"/>
+              <stop offset="100%" stop-color="#4c3a2b"/>
+            </radialGradient>
+          </defs>
+          <!-- door stripes -->
+          <g stroke="#3d2e21" stroke-width="4" opacity=".5">
+            <line x1="120" y1="262" x2="780" y2="262"/>
+            <line x1="120" y1="328" x2="780" y2="328"/>
+            <line x1="120" y1="394" x2="780" y2="394"/>
+            <line x1="120" y1="460" x2="780" y2="460"/>
+          </g>
+          <!-- side windows -->
+          <g fill="#bdeaff" stroke="#c74312" stroke-width="6">
+            <rect x="66" y="240" width="40" height="90" rx="8"/>
+            <rect x="794" y="240" width="40" height="90" rx="8"/>
+          </g>
+          <!-- floor -->
+          <rect x="0" y="542" width="900" height="98" fill="#9aa3ad"/>
+          <g>
+            <rect x="0" y="542" width="900" height="12" fill="#7e8894"/>
+            <g fill="#868f99">
+              <rect x="20" y="566" width="52" height="24"/><rect x="124" y="566" width="52" height="24"/>
+              <rect x="228" y="566" width="52" height="24"/><rect x="332" y="566" width="52" height="24"/>
+              <rect x="436" y="566" width="52" height="24"/><rect x="540" y="566" width="52" height="24"/>
+              <rect x="644" y="566" width="52" height="24"/><rect x="748" y="566" width="52" height="24"/>
+            </g>
+            <g fill="#aeb6bf">
+              <rect x="72" y="566" width="52" height="24"/><rect x="176" y="566" width="52" height="24"/>
+              <rect x="280" y="566" width="52" height="24"/><rect x="384" y="566" width="52" height="24"/>
+              <rect x="488" y="566" width="52" height="24"/><rect x="592" y="566" width="52" height="24"/>
+              <rect x="696" y="566" width="52" height="24"/><rect x="800" y="566" width="52" height="24"/>
+            </g>
+          </g>
+          <!-- traffic cone -->
+          <g id="cone" style="cursor:pointer">
+            <path d="M 74 540 L 94 478 L 114 540 Z" fill="#ff7b2e"/>
+            <rect x="82" y="508" width="24" height="12" fill="#ffffff"/>
+            <rect x="62" y="538" width="64" height="10" rx="4" fill="#e2571e"/>
+            <rect x="60" y="470" width="68" height="76" fill="transparent"/>
+          </g>
+          <!-- gas pump -->
+          <g id="pump" style="cursor:pointer">
+            <rect x="800" y="440" width="52" height="100" rx="10" fill="#3fa7d6"/>
+            <rect x="810" y="452" width="32" height="30" rx="5" fill="#dff6ff"/>
+            <circle cx="826" cy="505" r="13" fill="#fff7e8"/>
+            <circle cx="826" cy="505" r="6" fill="#e2571e"/>
+            <rect x="792" y="428" width="70" height="118" fill="transparent"/>
+          </g>
+
+          <!-- headlight beams (in front of car) -->
+          <g id="beams" opacity="0">
+            <polygon points="700,428 880,398 880,474 700,452" fill="#fff6a8" opacity=".75"/>
+          </g>
+
+          <!-- car gets built here -->
+          <g id="carG"></g>
+          <!-- big invisible tap targets for wheels -->
+          <g id="hits"></g>
+        </svg>
+        <div id="fx"></div>
+        <div id="yay">YAY!</div>
+      </div>
+      <div id="rack" aria-label="Tire rack"></div>
+    </div>
+
+    <script>
+      "use strict";
+      var SVGNS = "http://www.w3.org/2000/svg";
+      var scene = document.getElementById("scene");
+      var stage = document.getElementById("stage");
+      var fx = document.getElementById("fx");
+      var carG = document.getElementById("carG");
+      var hitsG = document.getElementById("hits");
+      var beams = document.getElementById("beams");
+      var rackEl = document.getElementById("rack");
+
+      /* ---------------- Audio (all synthesized) ---------------- */
+      var AC = null;
+      function audio() {
+        if (!AC) {
+          try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; }
+        }
+        if (AC && AC.state === "suspended") AC.resume();
+        return AC;
+      }
+      function tone(freq, dur, type, vol, delay, slideTo) {
+        var ac = audio(); if (!ac) return;
+        var t0 = ac.currentTime + (delay || 0);
+        var o = ac.createOscillator(), g = ac.createGain();
+        o.type = type || "sine";
+        o.frequency.setValueAtTime(freq, t0);
+        if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(30, slideTo), t0 + dur);
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(vol || 0.2, t0 + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        o.connect(g); g.connect(ac.destination);
+        o.start(t0); o.stop(t0 + dur + 0.05);
+      }
+      function noiseHit(dur, freq, vol, delay, q) {
+        var ac = audio(); if (!ac) return;
+        var t0 = ac.currentTime + (delay || 0);
+        var len = Math.max(1, Math.floor(ac.sampleRate * dur));
+        var buf = ac.createBuffer(1, len, ac.sampleRate);
+        var d = buf.getChannelData(0);
+        for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+        var src = ac.createBufferSource(); src.buffer = buf;
+        var f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = freq; f.Q.value = q || 1;
+        var g = ac.createGain(); g.gain.value = vol;
+        src.connect(f); f.connect(g); g.connect(ac.destination);
+        src.start(t0);
+      }
+      function sndPop()    { tone(420, 0.14, "sine", 0.35, 0, 70); noiseHit(0.08, 900, 0.25); }
+      function sndBoing()  { tone(160, 0.28, "sine", 0.22, 0, 520); }
+      function sndRatchet(){ for (var i = 0; i < 3; i++) noiseHit(0.03, 2400, 0.3, i * 0.07, 4); tone(300, 0.08, "square", 0.06, 0.21); }
+      function sndHonk()   { tone(392, 0.22, "square", 0.16); tone(494, 0.22, "square", 0.16); }
+      function sndDing(f)  { tone(f || 1180, 0.35, "sine", 0.18); tone((f || 1180) * 1.5, 0.3, "sine", 0.08, 0.02); }
+      function sndSparkle(){ tone(1560, 0.12, "triangle", 0.14); tone(2090, 0.16, "triangle", 0.12, 0.06); }
+      function sndCheer() {
+        var notes = [523, 659, 784, 1047, 784, 1047];
+        for (var i = 0; i < notes.length; i++) tone(notes[i], 0.22, "triangle", 0.22, i * 0.11);
+        noiseHit(0.5, 5000, 0.06, 0.1, 0.7);
+      }
+      function sndVroom() {
+        var ac = audio(); if (!ac) return;
+        var t0 = ac.currentTime;
+        var o = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter();
+        o.type = "sawtooth";
+        o.frequency.setValueAtTime(55, t0);
+        o.frequency.exponentialRampToValueAtTime(190, t0 + 1.1);
+        f.type = "lowpass"; f.frequency.value = 420;
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.16, t0 + 0.1);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.25);
+        o.connect(f); f.connect(g); g.connect(ac.destination);
+        o.start(t0); o.stop(t0 + 1.3);
+      }
+
+      /* ---------------- Tire artwork ---------------- */
+      var TIRE_TYPES = ["classic", "monster", "rainbow", "donut", "star"];
+      function tireInner(type, r) {
+        var s = "";
+        if (type === "monster") {
+          s += '<circle r="' + r + '" fill="#4a3423"/>';
+          for (var i = 0; i < 10; i++) {
+            var a = i * 36;
+            s += '<rect x="' + (-r * 0.16) + '" y="' + (-r * 1.12) + '" width="' + (r * 0.32) + '" height="' + (r * 0.3) + '" rx="' + (r * 0.08) + '" fill="#38261a" transform="rotate(' + a + ')"/>';
+          }
+          s += '<circle r="' + (r * 0.78) + '" fill="#5d4430"/>';
+          s += '<circle r="' + (r * 0.42) + '" fill="#c9a227"/>';
+          s += '<circle r="' + (r * 0.18) + '" fill="#8a6d1f"/>';
+        } else if (type === "rainbow") {
+          var cols = ["#ef476f", "#ff9f1c", "#ffd93f", "#6bcb77", "#3fa7d6"];
+          for (var j = 0; j < cols.length; j++) {
+            s += '<circle r="' + (r * (1 - j * 0.17)) + '" fill="' + cols[j] + '"/>';
+          }
+          s += '<circle r="' + (r * 0.2) + '" fill="#fff7e8"/>';
+        } else if (type === "donut") {
+          s += '<circle r="' + r + '" fill="#e8a75c"/>';
+          s += '<circle r="' + (r * 0.8) + '" fill="#ff8fb2"/>';
+          var sprinkles = [[-0.4, -0.35, 20], [0.3, -0.5, -30], [0.5, 0.15, 60], [-0.15, 0.45, -50], [-0.55, 0.2, 10], [0.1, -0.1, 80], [0.42, -0.18, -70], [-0.3, -0.62, 40]];
+          var scol = ["#ffffff", "#3fa7d6", "#ffd93f", "#6bcb77", "#ef476f"];
+          for (var k = 0; k < sprinkles.length; k++) {
+            s += '<rect x="' + (sprinkles[k][0] * r - r * 0.11) + '" y="' + (sprinkles[k][1] * r - r * 0.045) + '" width="' + (r * 0.22) + '" height="' + (r * 0.09) + '" rx="' + (r * 0.045) + '" fill="' + scol[k % scol.length] + '" transform="rotate(' + sprinkles[k][2] + ' ' + (sprinkles[k][0] * r) + ' ' + (sprinkles[k][1] * r) + ')"/>';
+          }
+          s += '<circle r="' + (r * 0.3) + '" fill="#8a5a2b"/>';
+          s += '<circle r="' + (r * 0.3) + '" fill="none" stroke="#6e4520" stroke-width="' + (r * 0.06) + '"/>';
+        } else if (type === "star") {
+          s += '<circle r="' + r + '" fill="#2f3542"/>';
+          s += '<circle r="' + (r * 0.8) + '" fill="#57606f"/>';
+          var pts = "";
+          for (var p = 0; p < 10; p++) {
+            var ang = (p * 36 - 90) * Math.PI / 180;
+            var rad = p % 2 === 0 ? r * 0.58 : r * 0.26;
+            pts += (Math.cos(ang) * rad).toFixed(1) + "," + (Math.sin(ang) * rad).toFixed(1) + " ";
+          }
+          s += '<polygon points="' + pts + '" fill="#ffd93f" stroke="#e8a812" stroke-width="' + (r * 0.05) + '"/>';
+          s += '<circle r="' + (r * 0.13) + '" fill="#e2571e"/>';
+        } else { /* classic */
+          s += '<circle r="' + r + '" fill="#2f3542"/>';
+          s += '<circle r="' + (r * 0.8) + '" fill="#454e5c"/>';
+          s += '<circle r="' + (r * 0.52) + '" fill="#dfe6ee"/>';
+          s += '<circle r="' + (r * 0.52) + '" fill="none" stroke="#aeb9c6" stroke-width="' + (r * 0.07) + '"/>';
+          for (var b = 0; b < 5; b++) {
+            var ba = b * 72 * Math.PI / 180;
+            s += '<circle cx="' + (Math.cos(ba) * r * 0.32).toFixed(1) + '" cy="' + (Math.sin(ba) * r * 0.32).toFixed(1) + '" r="' + (r * 0.09) + '" fill="#8d99a8"/>';
+          }
+          s += '<circle r="' + (r * 0.15) + '" fill="#e2571e"/>';
+        }
+        return s;
+      }
+      function tireSVGString(type, size) {
+        var r = 48;
+        return '<svg viewBox="-52 -52 104 104" width="' + size + '" height="' + size + '">' + tireInner(type, r) + "</svg>";
+      }
+
+      /* ---------------- Car artwork ---------------- */
+      var CARS = [
+        { type: "sedan", name: "car" },
+        { type: "truck", name: "truck" },
+        { type: "race", name: "race car" },
+        { type: "bus", name: "bus" },
+        { type: "van", name: "van" }
+      ];
+      var COLORS = ["#ef476f", "#3fa7d6", "#6bcb77", "#ff9f1c", "#ffd93f", "#ff6b4a", "#4ecdc4"];
+      var WHEEL_Y = 492, WHEEL_R = 47;
+
+      function carBody(type, c) {
+        var dark = "rgba(0,0,0,0.16)", win = "#bdeaff";
+        if (type === "truck") {
+          return '' +
+          '<path d="M -268 492 L -268 372 Q -268 356 -252 356 L -120 356 L -120 300 Q -120 284 -104 284 L 6 284 Q 22 284 34 298 L 92 356 L 236 356 Q 268 356 268 392 L 268 492 L 182 492 A 62 62 0 0 0 58 492 L -108 492 A 62 62 0 0 0 -232 492 Z" fill="' + c + '"/>' +
+          '<rect x="-252" y="372" width="122" height="52" rx="8" fill="' + dark + '"/>' +
+          '<path d="M -104 300 L -2 300 Q 10 300 20 312 L 62 356 L -104 356 Z" fill="' + win + '"/>' +
+          '<rect x="-14" y="300" width="10" height="56" fill="' + c + '"/>' +
+          '<circle cx="-84" cy="386" r="8" fill="' + dark + '"/>' +
+          '<rect x="238" y="398" width="30" height="20" rx="6" fill="#fff6a8"/>' +
+          '<rect x="-268" y="398" width="16" height="20" rx="6" fill="#ff5a5a"/>';
+        }
+        if (type === "race") {
+          return '' +
+          '<rect x="-272" y="330" width="16" height="66" rx="6" fill="' + c + '"/>' +
+          '<rect x="-282" y="322" width="86" height="16" rx="8" fill="' + c + '"/>' +
+          '<path d="M -262 492 L -262 420 Q -262 396 -230 388 L -128 372 L -84 322 Q -72 306 -48 306 L 66 306 Q 92 306 112 326 L 162 372 L 238 388 Q 266 396 266 424 L 266 492 L 184 492 A 62 62 0 0 0 60 492 L -106 492 A 62 62 0 0 0 -230 492 Z" fill="' + c + '"/>' +
+          '<path d="M -118 374 L -78 328 Q -70 318 -54 318 L -30 318 L -30 374 Z" fill="' + win + '"/>' +
+          '<path d="M -18 318 L 58 318 Q 80 318 96 332 L 140 374 L -18 374 Z" fill="' + win + '"/>' +
+          '<rect x="-262" y="428" width="528" height="20" fill="#ffffff" opacity=".85"/>' +
+          '<circle cx="30" cy="402" r="24" fill="#ffffff"/>' +
+          '<text x="30" y="412" text-anchor="middle" font-family="\'Baloo 2\',sans-serif" font-weight="800" font-size="30" fill="' + c + '">7</text>' +
+          '<rect x="236" y="404" width="30" height="18" rx="6" fill="#fff6a8"/>';
+        }
+        if (type === "bus") {
+          var wins = "";
+          for (var i = 0; i < 5; i++) {
+            wins += '<rect x="' + (-238 + i * 86) + '" y="306" width="66" height="56" rx="9" fill="' + win + '"/>';
+          }
+          return '' +
+          '<path d="M -272 492 L -272 316 Q -272 282 -238 282 L 216 282 Q 272 282 272 340 L 272 492 L 184 492 A 62 62 0 0 0 60 492 L -110 492 A 62 62 0 0 0 -234 492 Z" fill="' + c + '"/>' +
+          wins +
+          '<rect x="206" y="306" width="52" height="86" rx="9" fill="' + win + '"/>' +
+          '<rect x="-272" y="392" width="544" height="18" fill="#ffffff" opacity=".8"/>' +
+          '<rect x="240" y="424" width="32" height="20" rx="6" fill="#fff6a8"/>' +
+          '<rect x="-272" y="424" width="16" height="20" rx="6" fill="#ff5a5a"/>' +
+          '<circle cx="176" cy="352" r="7" fill="' + dark + '"/>';
+        }
+        if (type === "van") {
+          return '' +
+          '<path d="M -268 492 L -268 306 Q -268 286 -248 286 L 128 286 Q 158 286 182 308 L 246 366 Q 268 386 268 416 L 268 492 L 182 492 A 62 62 0 0 0 58 492 L -108 492 A 62 62 0 0 0 -232 492 Z" fill="' + c + '"/>' +
+          '<path d="M 142 306 L 176 330 Q 196 346 210 366 L 142 366 Z" fill="' + win + '"/>' +
+          '<rect x="-240" y="308" width="92" height="66" rx="9" fill="' + win + '"/>' +
+          '<rect x="-128" y="308" width="92" height="66" rx="9" fill="' + win + '"/>' +
+          '<rect x="-16" y="308" width="80" height="66" rx="9" fill="' + win + '"/>' +
+          '<rect x="-240" y="392" width="380" height="10" fill="' + dark + '"/>' +
+          '<rect x="238" y="404" width="30" height="19" rx="6" fill="#fff6a8"/>' +
+          '<rect x="-268" y="404" width="15" height="19" rx="6" fill="#ff5a5a"/>';
+        }
+        /* sedan */
+        return '' +
+        '<path d="M -268 492 L -268 424 Q -268 396 -232 386 L -140 368 L -92 314 Q -76 294 -44 294 L 62 294 Q 96 294 118 318 L 164 366 L 232 384 Q 268 394 268 426 L 268 492 L 182 492 A 62 62 0 0 0 58 492 L -108 492 A 62 62 0 0 0 -232 492 Z" fill="' + c + '"/>' +
+        '<path d="M -128 368 L -84 322 Q -72 308 -50 308 L -26 308 L -26 368 Z" fill="' + win + '"/>' +
+        '<path d="M -12 308 L 56 308 Q 84 308 102 326 L 146 368 L -12 368 Z" fill="' + win + '"/>' +
+        '<circle cx="-52" cy="392" r="7" fill="' + dark + '"/>' +
+        '<circle cx="22" cy="392" r="7" fill="' + dark + '"/>' +
+        '<rect x="238" y="402" width="30" height="19" rx="6" fill="#fff6a8"/>' +
+        '<rect x="-268" y="402" width="15" height="19" rx="6" fill="#ff5a5a"/>';
+      }
+
+      /* Wheel slots in car-local coords: [farRear, farFront, nearRear, nearFront] */
+      var SLOTS = [
+        { x: -184, y: WHEEL_Y - 20, r: WHEEL_R * 0.8, far: true },
+        { x: 108, y: WHEEL_Y - 20, r: WHEEL_R * 0.8, far: true },
+        { x: -170, y: WHEEL_Y, r: WHEEL_R, far: false },
+        { x: 122, y: WHEEL_Y, r: WHEEL_R, far: false }
+      ];
+      var CAR_CX = 450; /* scene x of car center */
+
+      var hubs = [];      /* {occupied, type, swapped, tireG, ringG, slot} */
+      var busy = false;
+      var hintTimer = null;
+      var lastCarIdx = -1, lastColorIdx = -1;
+
+      function buildCar() {
+        var ci, co;
+        do { ci = Math.floor(Math.random() * CARS.length); } while (ci === lastCarIdx);
+        do { co = Math.floor(Math.random() * COLORS.length); } while (co === lastColorIdx);
+        lastCarIdx = ci; lastColorIdx = co;
+        var def = CARS[ci], color = COLORS[co];
+        var startType = TIRE_TYPES[Math.floor(Math.random() * 2)]; /* classic or monster look on arrival */
+        startType = "classic";
+
+        var html = '<g id="carBody" transform="translate(' + CAR_CX + ',0)">';
+        /* far wheels under body */
+        for (var f = 0; f < 2; f++) {
+          var sf = SLOTS[f];
+          html += '<g class="wheelG" data-hub="' + f + '" transform="translate(' + sf.x + ',' + sf.y + ')">' +
+            '<g class="hubBase"><circle r="' + (sf.r + 7) + '" fill="#3a2e22"/></g>' +
+            '<g class="ringG" style="display:none"><circle class="hub-ring" r="' + (sf.r + 10) + '" fill="none" stroke="#ffd93f" stroke-width="7" stroke-dasharray="12 10"/></g>' +
+            '<g class="tireG">' + tireInner(startType, sf.r) + '<circle r="' + sf.r + '" fill="rgba(0,0,0,0.28)"/></g></g>';
+        }
+        html += '<g id="bodyG">' + carBody(def.type, color) + "</g>";
+        /* near wheels over body bottom */
+        for (var n = 2; n < 4; n++) {
+          var sn = SLOTS[n];
+          html += '<g class="wheelG" data-hub="' + n + '" transform="translate(' + sn.x + ',' + sn.y + ')">' +
+            '<g class="hubBase"><circle r="' + (sn.r + 7) + '" fill="#3a2e22"/></g>' +
+            '<g class="ringG" style="display:none"><circle class="hub-ring" r="' + (sn.r + 10) + '" fill="none" stroke="#ffd93f" stroke-width="7" stroke-dasharray="12 10"/></g>' +
+            '<g class="tireG">' + tireInner(startType, sn.r) + "</g></g>";
+        }
+        html += "</g>";
+        carG.innerHTML = html;
+
+        /* tap targets */
+        var hits = "";
+        for (var h = 0; h < 4; h++) {
+          hits += '<circle class="hit" data-hub="' + h + '" role="button" tabindex="0" aria-label="tire" cx="' + (CAR_CX + SLOTS[h].x) + '" cy="' + SLOTS[h].y + '" r="72" fill="rgba(0,0,0,0)"/>';
+        }
+        /* body tap target (honk) */
+        hits += '<rect id="bodyHit" x="' + (CAR_CX - 250) + '" y="290" width="500" height="180" fill="rgba(0,0,0,0)"/>';
+        hitsG.innerHTML = hits;
+        /* Keyboard / switch access: Enter or Space on a focused wheel pops or
+           wiggles exactly like a tap on that wheel. */
+        var hitEls = hitsG.querySelectorAll(".hit");
+        for (var k = 0; k < hitEls.length; k++) {
+          (function (idx) {
+            hitEls[idx].addEventListener("keydown", function (e) {
+              if (e.key === "Enter" || e.key === " ") { e.preventDefault(); audio(); if (!busy) { stopHint(); onHubTap(idx); } }
+            });
+          })(k);
+        }
+
+        hubs = [];
+        var wheelGs = carG.querySelectorAll(".wheelG");
+        for (var w = 0; w < 4; w++) {
+          hubs.push({
+            occupied: true, type: startType, swapped: false,
+            g: wheelGs[w],
+            tireG: wheelGs[w].querySelector(".tireG"),
+            ringG: wheelGs[w].querySelector(".ringG"),
+            slot: SLOTS[w]
+          });
+        }
+        /* One coordinate-based handler for the whole hits layer: the far and
+           near wheels overlap, so pick the best hub by distance instead of
+           relying on which circle happens to be on top. */
+        hitsG.onpointerdown = function (e) {
+          e.preventDefault(); audio();
+          if (busy) return;
+          if (e.target && e.target.id === "bodyHit") { sndHonk(); bounceBody(); return; }
+          var pick = pickHub(e.clientX, e.clientY);
+          if (pick >= 0) onHubTap(pick);
+        };
+      }
+
+      /* Nearest occupied hub within reach wins; otherwise the nearest hub
+         (so tapping an empty spot still boings). Uses live screen rects, so
+         it stays correct even mid-animation. */
+      function pickHub(cx, cy) {
+        var bestOcc = -1, bestOccD = 1e9, bestAny = -1, bestAnyD = 1e9;
+        for (var i = 0; i < hubs.length; i++) {
+          var r = hubs[i].g.getBoundingClientRect();
+          var d = Math.hypot(cx - (r.left + r.width / 2), cy - (r.top + r.height / 2));
+          if (d < bestAnyD) { bestAnyD = d; bestAny = i; }
+          if (hubs[i].occupied && d < bestOccD) { bestOccD = d; bestOcc = i; }
+        }
+        var reach = 120;
+        if (bestOcc >= 0 && bestOccD < reach) return bestOcc;
+        if (bestAny >= 0 && bestAnyD < reach) return bestAny;
+        return -1;
+      }
+
+      function bounceBody() {
+        var b = document.getElementById("carBody");
+        if (!b || !b.animate) return;
+        b.animate([
+          { transform: "translate(" + CAR_CX + "px,0px) scale(1,1)" },
+          { transform: "translate(" + CAR_CX + "px,6px) scale(1.02,0.94)" },
+          { transform: "translate(" + CAR_CX + "px,-4px) scale(0.99,1.03)" },
+          { transform: "translate(" + CAR_CX + "px,0px) scale(1,1)" }
+        ], { duration: 380, easing: "ease-out" });
+      }
+
+      /* ---------------- Core loop ---------------- */
+      function onHubTap(i) {
+        audio();
+        if (busy) return;
+        stopHint();
+        var hub = hubs[i];
+        if (hub.occupied) popOff(i);
+        else { sndBoing(); wiggleHub(i); }
+      }
+
+      function popOff(i) {
+        var hub = hubs[i];
+        hub.occupied = false;
+        sndPop();
+        var g = hub.tireG;
+        var dir = hub.slot.x < 0 ? -1 : 1;
+        var dx = dir * (120 + Math.random() * 90);
+        if (g.animate) {
+          var anim = g.animate([
+            { transform: "translate(0px,0px) rotate(0deg) scale(1)", opacity: 1 },
+            { transform: "translate(" + (dx * 0.5) + "px,-120px) rotate(" + (dir * 160) + "deg) scale(1.06)", opacity: 1, offset: 0.45 },
+            { transform: "translate(" + dx + "px,190px) rotate(" + (dir * 320) + "deg) scale(0.95)", opacity: 1, offset: 0.75 },
+            { transform: "translate(" + (dx * 1.25) + "px,330px) rotate(" + (dir * 420) + "deg) scale(0.9)", opacity: 0 }
+          ], { duration: 620, easing: "cubic-bezier(.3,.6,.6,1)" });
+          anim.onfinish = function () { g.style.display = "none"; };
+        } else {
+          g.style.display = "none";
+        }
+        setTimeout(function () { sndBoing(); }, 480);
+        hub.ringG.style.display = "";
+        sparkleAt(CAR_CX + hub.slot.x, hub.slot.y);
+      }
+
+      function wiggleHub(i) {
+        var hub = hubs[i];
+        if (hub.ringG.animate) {
+          hub.ringG.animate([
+            { transform: "rotate(0deg)" }, { transform: "rotate(-7deg)" },
+            { transform: "rotate(7deg)" }, { transform: "rotate(0deg)" }
+          ], { duration: 300 });
+        }
+      }
+
+      function firstEmptyHub() {
+        for (var i = 0; i < 4; i++) if (!hubs[i].occupied && !hubs[i].reserved) return i;
+        return -1;
+      }
+
+      function placeTire(i, type) {
+        var hub = hubs[i];
+        hub.occupied = true;
+        hub.type = type;
+        hub.swapped = true;
+        hub.ringG.style.display = "none";
+        hub.tireG.innerHTML = tireInner(type, hub.slot.r) + (hub.slot.far ? '<circle r="' + hub.slot.r + '" fill="rgba(0,0,0,0.28)"/>' : "");
+        hub.tireG.style.display = "";
+        sndRatchet();
+        if (hub.tireG.animate) {
+          hub.tireG.animate([
+            { transform: "scale(1.55)", opacity: 0.4 },
+            { transform: "scale(0.88)", opacity: 1, offset: 0.55 },
+            { transform: "scale(1.1)", offset: 0.78 },
+            { transform: "scale(1)" }
+          ], { duration: 420, easing: "ease-out" });
+        }
+        sparkleAt(CAR_CX + hub.slot.x, hub.slot.y);
+        checkComplete();
+      }
+
+      function checkComplete() {
+        for (var i = 0; i < 4; i++) {
+          if (!hubs[i].occupied || !hubs[i].swapped) return;
+        }
+        celebrate();
+      }
+
+      function celebrate() {
+        busy = true;
+        sndHonk();
+        setTimeout(sndHonk, 260);
+        setTimeout(sndCheer, 420);
+        flashLights();
+        bounceBody();
+        confetti();
+        var yay = document.getElementById("yay");
+        if (yay.animate) {
+          yay.animate([
+            { transform: "translate(-50%,-50%) scale(0) rotate(-14deg)", opacity: 0 },
+            { transform: "translate(-50%,-50%) scale(1.15) rotate(3deg)", opacity: 1, offset: 0.45 },
+            { transform: "translate(-50%,-50%) scale(1) rotate(0deg)", opacity: 1, offset: 0.7 },
+            { transform: "translate(-50%,-50%) scale(1) rotate(0deg)", opacity: 1, offset: 0.88 },
+            { transform: "translate(-50%,-50%) scale(0.6)", opacity: 0 }
+          ], { duration: 1500, easing: "ease-out" });
+        }
+        setTimeout(driveOff, 1600);
+      }
+
+      function flashLights() {
+        var n = 0;
+        var iv = setInterval(function () {
+          beams.setAttribute("opacity", n % 2 === 0 ? "1" : "0");
+          n++;
+          if (n > 5) { clearInterval(iv); beams.setAttribute("opacity", "0"); }
+        }, 170);
+      }
+
+      function driveOff() {
+        sndVroom();
+        for (var i = 0; i < 4; i++) hubs[i].tireG.classList.add("spin");
+        var body = document.getElementById("carBody");
+        var startX = CAR_CX;
+        if (body && body.animate) {
+          var anim = body.animate([
+            { transform: "translate(" + startX + "px,0px)" },
+            { transform: "translate(" + (startX + 1050) + "px,0px)" }
+          ], { duration: 1250, easing: "cubic-bezier(.5,0,.9,.4)" });
+          anim.onfinish = nextCar;
+        } else {
+          setTimeout(nextCar, 600);
+        }
+        /* move hit targets away with the car */
+        hitsG.style.display = "none";
+      }
+
+      function rollIn(body) {
+        if (body && body.animate) {
+          busy = true;
+          var anim = body.animate([
+            { transform: "translate(" + (CAR_CX - 1050) + "px,0px)" },
+            { transform: "translate(" + (CAR_CX + 26) + "px,0px)", offset: 0.78 },
+            { transform: "translate(" + (CAR_CX - 10) + "px,0px)", offset: 0.9 },
+            { transform: "translate(" + CAR_CX + "px,0px)" }
+          ], { duration: 1150, easing: "cubic-bezier(.2,.7,.3,1)" });
+          sndVroom();
+          anim.onfinish = function () { busy = false; startHint(); };
+        } else {
+          busy = false;
+          startHint();
+        }
+      }
+
+      function nextCar() {
+        buildCar();
+        hitsG.style.display = "";
+        rollIn(document.getElementById("carBody"));
+      }
+
+      /* ---------------- Rack ---------------- */
+      var dragState = null;
+      function buildRack() {
+        rackEl.innerHTML = "";
+        TIRE_TYPES.forEach(function (type) {
+          var btn = document.createElement("button");
+          btn.className = "rack-btn";
+          btn.setAttribute("aria-label", type + " tire");
+          btn.innerHTML = tireSVGString(type, 100);
+          btn.addEventListener("pointerdown", function (e) {
+            e.preventDefault();
+            audio();
+            startDrag(e, type, btn);
+          });
+          /* Keyboard-triggered clicks have detail 0 (pointer clicks are >= 1
+             and are already handled by the drag flow). */
+          btn.addEventListener("click", function (e) {
+            if (e.detail !== 0 || busy) return;
+            audio(); stopHint();
+            var t = firstEmptyHub();
+            if (t < 0) { sndHonk(); bounceBody(); return; }
+            var r = btn.getBoundingClientRect();
+            var ghost = document.createElement("div");
+            ghost.className = "fly-tire";
+            ghost.innerHTML = tireSVGString(type, 104);
+            stage.appendChild(ghost);
+            moveGhost(ghost, r.left + r.width / 2, r.top + r.height / 2);
+            flyToHub(ghost, t, type);
+          });
+          rackEl.appendChild(btn);
+        });
+      }
+
+      function startDrag(e, type, btn) {
+        stopHint();
+        var ghost = document.createElement("div");
+        ghost.className = "fly-tire";
+        ghost.innerHTML = tireSVGString(type, 104);
+        stage.appendChild(ghost);
+        moveGhost(ghost, e.clientX, e.clientY);
+        if (ghost.animate) {
+          ghost.animate([{ transform: "translate(-50%,-50%) scale(.6)" }, { transform: "translate(-50%,-50%) scale(1)" }], { duration: 140 });
+        }
+        dragState = { type: type, ghost: ghost, startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY };
+        sndSparkle();
+      }
+      function moveGhost(ghost, cx, cy) {
+        var r = stage.getBoundingClientRect();
+        ghost.style.left = (cx - r.left) + "px";
+        ghost.style.top = (cy - r.top) + "px";
+        ghost.style.transform = "translate(-50%,-50%)";
+      }
+      window.addEventListener("pointermove", function (e) {
+        if (!dragState) return;
+        dragState.x = e.clientX; dragState.y = e.clientY;
+        moveGhost(dragState.ghost, e.clientX, e.clientY);
+      });
+      window.addEventListener("pointercancel", function () {
+        if (!dragState) return;
+        dragState.ghost.remove();
+        dragState = null;
+      });
+      window.addEventListener("pointerup", function (e) {
+        if (!dragState) return;
+        var d = dragState; dragState = null;
+        var moved = Math.hypot(e.clientX - d.startX, e.clientY - d.startY);
+        /* dropped near an empty hub? */
+        var target = -1;
+        if (!busy) {
+          var best = 110;
+          for (var i = 0; i < 4; i++) {
+            if (hubs[i].occupied || hubs[i].reserved) continue;
+            var pt = hubScreenPos(i);
+            var dist = Math.hypot(e.clientX - pt.x, e.clientY - pt.y);
+            if (dist < best) { best = dist; target = i; }
+          }
+        }
+        if (target < 0 && moved < 34 && !busy) target = firstEmptyHub();
+        if (target >= 0) {
+          flyToHub(d.ghost, target, d.type);
+        } else {
+          /* no spot: happy bounce and vanish */
+          sndBoing();
+          if (d.ghost.animate) {
+            var a = d.ghost.animate([
+              { transform: "translate(-50%,-50%) scale(1)" },
+              { transform: "translate(-50%,-140%) scale(.4) rotate(120deg)", opacity: 0 }
+            ], { duration: 260, easing: "ease-in" });
+            a.onfinish = function () { d.ghost.remove(); };
+          } else d.ghost.remove();
+          if (!busy && firstEmptyHub() < 0) { /* car full but not finished can't happen; all occupied+unswapped -> honk hello */
+            sndHonk(); bounceBody();
+          }
+        }
+      });
+
+      function hubScreenPos(i) {
+        var hub = hubs[i];
+        var pt = scene.createSVGPoint();
+        pt.x = CAR_CX + hub.slot.x; pt.y = hub.slot.y;
+        var m = scene.getScreenCTM();
+        var p = pt.matrixTransform(m);
+        return { x: p.x, y: p.y };
+      }
+
+      function flyToHub(ghost, hubIdx, type) {
+        var hub = hubs[hubIdx];
+        hub.reserved = true; /* claim the spot so rapid taps can't double-book it */
+        var pt = hubScreenPos(hubIdx);
+        var r = stage.getBoundingClientRect();
+        var fromX = parseFloat(ghost.style.left), fromY = parseFloat(ghost.style.top);
+        var toX = pt.x - r.left, toY = pt.y - r.top;
+        var midX = (fromX + toX) / 2, midY = Math.min(fromY, toY) - 90;
+        function land() {
+          ghost.remove();
+          hub.reserved = false;
+          if (busy) return;
+          if (!hub.occupied) placeTire(hubIdx, type);
+          else { var alt = firstEmptyHub(); if (alt >= 0) placeTire(alt, type); }
+        }
+        if (ghost.animate) {
+          var a = ghost.animate([
+            { left: fromX + "px", top: fromY + "px", transform: "translate(-50%,-50%) scale(1) rotate(0deg)" },
+            { left: midX + "px", top: midY + "px", transform: "translate(-50%,-50%) scale(1.12) rotate(140deg)", offset: 0.55 },
+            { left: toX + "px", top: toY + "px", transform: "translate(-50%,-50%) scale(1) rotate(300deg)" }
+          ], { duration: 380, easing: "ease-out" });
+          a.onfinish = land;
+        } else land();
+      }
+
+      /* ---------------- Delight taps ---------------- */
+      function sparkleAt(sx, sy) {
+        var r = stage.getBoundingClientRect();
+        var pt = scene.createSVGPoint(); pt.x = sx; pt.y = sy;
+        var p = pt.matrixTransform(scene.getScreenCTM());
+        burst(p.x - r.left, p.y - r.top);
+      }
+      function burst(x, y) {
+        var chars = ["✦", "★", "✦", "•"];
+        var cols = ["#ffd93f", "#ef476f", "#3fa7d6", "#6bcb77", "#ff9f1c"];
+        for (var i = 0; i < 7; i++) {
+          var s = document.createElement("div");
+          s.className = "spark";
+          s.textContent = chars[i % chars.length];
+          s.style.color = cols[i % cols.length];
+          s.style.left = x + "px"; s.style.top = y + "px";
+          fx.appendChild(s);
+          var ang = (i / 7) * Math.PI * 2 + Math.random() * 0.5;
+          var dist = 44 + Math.random() * 40;
+          if (s.animate) {
+            var a = s.animate([
+              { transform: "translate(-50%,-50%) scale(.4)", opacity: 1 },
+              { transform: "translate(" + (Math.cos(ang) * dist - 13) + "px," + (Math.sin(ang) * dist - 13) + "px) scale(1.15)", opacity: 0 }
+            ], { duration: 480 + Math.random() * 180, easing: "ease-out" });
+            a.onfinish = (function (el) { return function () { el.remove(); }; })(s);
+          } else setTimeout((function (el) { return function () { el.remove(); }; })(s), 500);
+        }
+      }
+      function confetti() {
+        var cols = ["#ef476f", "#ffd93f", "#3fa7d6", "#6bcb77", "#ff9f1c", "#ff6b4a"];
+        var r = stage.getBoundingClientRect();
+        for (var i = 0; i < 42; i++) {
+          var c = document.createElement("div");
+          c.className = "confetti";
+          var sz = 8 + Math.random() * 9;
+          c.style.width = sz + "px"; c.style.height = sz * (0.5 + Math.random()) + "px";
+          c.style.background = cols[i % cols.length];
+          c.style.left = (Math.random() * r.width) + "px";
+          fx.appendChild(c);
+          if (c.animate) {
+            var fall = c.animate([
+              { transform: "translateY(0) rotate(0deg)", opacity: 1 },
+              { transform: "translateY(" + (r.height + 60) + "px) rotate(" + (360 + Math.random() * 500) + "deg)", opacity: 0.9 }
+            ], { duration: 1500 + Math.random() * 1100, delay: Math.random() * 350, easing: "cubic-bezier(.2,.6,.6,1)" });
+            fall.onfinish = (function (el) { return function () { el.remove(); }; })(c);
+          } else setTimeout((function (el) { return function () { el.remove(); }; })(c), 2000);
+        }
+      }
+
+      document.getElementById("sign").addEventListener("pointerdown", function (e) {
+        e.preventDefault(); audio();
+        sndDing(880); setTimeout(function () { sndDing(1320); }, 90);
+        var sign = document.getElementById("sign");
+        if (sign.animate) {
+          sign.animate([
+            { transform: "rotate(0deg)", transformOrigin: "450px 86px" },
+            { transform: "rotate(-2.4deg)", transformOrigin: "450px 86px" },
+            { transform: "rotate(2deg)", transformOrigin: "450px 86px" },
+            { transform: "rotate(0deg)", transformOrigin: "450px 86px" }
+          ], { duration: 450, easing: "ease-in-out" });
+        }
+        var bulbs = document.getElementById("bulbs");
+        bulbs.setAttribute("fill", "#ff9f1c");
+        setTimeout(function () { bulbs.setAttribute("fill", "#ffd93f"); }, 220);
+        setTimeout(function () { bulbs.setAttribute("fill", "#ff9f1c"); }, 440);
+        setTimeout(function () { bulbs.setAttribute("fill", "#ffd93f"); }, 660);
+        var r = stage.getBoundingClientRect();
+        burst(r.width / 2, 60);
+      });
+      document.getElementById("sun").addEventListener("pointerdown", function (e) {
+        e.preventDefault(); audio(); sndSparkle();
+        var sun = document.getElementById("sun");
+        if (sun.animate) sun.animate([{ transform: "rotate(0deg)", transformOrigin: "806px 66px" }, { transform: "rotate(360deg)", transformOrigin: "806px 66px" }], { duration: 800, easing: "ease-out" });
+      });
+      document.getElementById("cone").addEventListener("pointerdown", function (e) {
+        e.preventDefault(); audio(); sndBoing();
+        var cone = document.getElementById("cone");
+        if (cone.animate) cone.animate([
+          { transform: "rotate(0deg)", transformOrigin: "94px 540px" },
+          { transform: "rotate(-13deg)", transformOrigin: "94px 540px" },
+          { transform: "rotate(10deg)", transformOrigin: "94px 540px" },
+          { transform: "rotate(0deg)", transformOrigin: "94px 540px" }
+        ], { duration: 420 });
+      });
+      document.getElementById("pump").addEventListener("pointerdown", function (e) {
+        e.preventDefault(); audio(); sndDing(660);
+        var pump = document.getElementById("pump");
+        if (pump.animate) pump.animate([
+          { transform: "scale(1)", transformOrigin: "826px 540px" },
+          { transform: "scale(1.07,0.93)", transformOrigin: "826px 540px" },
+          { transform: "scale(1)", transformOrigin: "826px 540px" }
+        ], { duration: 300 });
+      });
+      scene.addEventListener("pointerdown", function (e) {
+        audio();
+        var r = stage.getBoundingClientRect();
+        if (Math.random() < 0.9) burst(e.clientX - r.left, e.clientY - r.top);
+        tone(700 + Math.random() * 500, 0.1, "triangle", 0.06);
+      });
+
+      /* ---------------- Hint wiggle ---------------- */
+      function startHint() {
+        stopHint();
+        hintTimer = setTimeout(function () {
+          if (busy) return;
+          for (var i = 0; i < 4; i++) {
+            if (hubs[i].occupied) { hubs[i].tireG.classList.add("wiggle-hint"); break; }
+          }
+        }, 2600);
+      }
+      function stopHint() {
+        if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
+        for (var i = 0; i < hubs.length; i++) hubs[i].tireG.classList.remove("wiggle-hint");
+      }
+
+      /* ---------------- Go ---------------- */
+      buildRack();
+      buildCar();
+      /* first car rolls in */
+      rollIn(document.getElementById("carBody"));
+    </script>
+  </body>
+</html>
