@@ -95,7 +95,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: clamp(8px, 2.5vw, 22px);
+        gap: clamp(6px, 1.8vw, 22px);
         box-shadow: 0 -6px 18px rgba(0,0,0,.18);
         z-index: 10;
       }
@@ -104,8 +104,8 @@
         border: none;
         background: #fff7e8;
         border-radius: 50%;
-        width: clamp(72px, 17vw, 118px);
-        height: clamp(72px, 17vw, 118px);
+        width: clamp(54px, 14.5vw, 118px);
+        height: clamp(54px, 14.5vw, 118px);
         padding: 7px;
         cursor: pointer;
         box-shadow: 0 5px 0 #d98a16, 0 9px 16px rgba(0,0,0,.22);
@@ -125,8 +125,21 @@
       @keyframes wiggleHint { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(-9deg); } 75% { transform: rotate(9deg); } }
       .cloud { animation: drift 26s linear infinite alternate; }
       @keyframes drift { from { transform: translateX(-14px); } to { transform: translateX(20px); } }
+      /* Tuna + Halloween helpers */
+      .tunaInner { transform-box: fill-box; transform-origin: 50% 92%; }
+      .tuna-tail { transform-box: fill-box; transform-origin: 100% 90%; animation: wag .55s ease-in-out infinite alternate; }
+      @keyframes wag { from { transform: rotate(-9deg); } to { transform: rotate(11deg); } }
+      .pumpkinInner { transform-box: fill-box; transform-origin: 50% 100%; }
+      .bat-sway { transform-box: fill-box; transform-origin: 50% 0%; animation: sway 3.4s ease-in-out infinite alternate; }
+      @keyframes sway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+      .bat-bob { animation: bob 2.8s ease-in-out infinite alternate; }
+      @keyframes bob { from { transform: translateY(-5px); } to { transform: translateY(6px); } }
+      .wingL { transform-box: fill-box; transform-origin: 100% 60%; animation: flapL .45s ease-in-out infinite alternate; }
+      .wingR { transform-box: fill-box; transform-origin: 0% 60%; animation: flapR .45s ease-in-out infinite alternate; }
+      @keyframes flapL { from { transform: rotate(8deg); } to { transform: rotate(-16deg); } }
+      @keyframes flapR { from { transform: rotate(-8deg); } to { transform: rotate(16deg); } }
       @media (prefers-reduced-motion: reduce) {
-        .cloud, .hub-ring, .wiggle-hint { animation: none; }
+        .cloud, .hub-ring, .wiggle-hint, .tuna-tail, .bat-sway, .bat-bob, .wingL, .wingR { animation: none; }
       }
     </style>
   </head>
@@ -235,6 +248,101 @@
             <rect x="792" y="428" width="70" height="118" fill="transparent"/>
           </g>
 
+          <!-- halloween: friendly flying bats -->
+          <g transform="translate(120,100)">
+            <g class="bat-bob">
+              <g class="wingL"><path d="M -6 -2 Q -24 -14 -33 1 Q -24 4 -19 -1 Q -14 7 -6 4 Z" fill="#54397e"/></g>
+              <g class="wingR"><path d="M 6 -2 Q 24 -14 33 1 Q 24 4 19 -1 Q 14 7 6 4 Z" fill="#54397e"/></g>
+              <ellipse cx="0" cy="2" rx="8" ry="10" fill="#6b4fa1"/>
+              <circle cx="0" cy="-7" r="6.5" fill="#6b4fa1"/>
+              <path d="M -6 -12 L -4 -18 L -1 -13 Z" fill="#6b4fa1"/>
+              <path d="M 6 -12 L 4 -18 L 1 -13 Z" fill="#6b4fa1"/>
+              <circle cx="-2.5" cy="-7" r="1.3" fill="#ffffff"/>
+              <circle cx="2.5" cy="-7" r="1.3" fill="#ffffff"/>
+              <path d="M -2.5 -3.5 Q 0 -1.8 2.5 -3.5" stroke="#ffffff" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+            </g>
+          </g>
+          <g transform="translate(712,92) scale(0.72)">
+            <g class="bat-bob" style="animation-duration:3.4s">
+              <g class="wingL"><path d="M -6 -2 Q -24 -14 -33 1 Q -24 4 -19 -1 Q -14 7 -6 4 Z" fill="#54397e"/></g>
+              <g class="wingR"><path d="M 6 -2 Q 24 -14 33 1 Q 24 4 19 -1 Q 14 7 6 4 Z" fill="#54397e"/></g>
+              <ellipse cx="0" cy="2" rx="8" ry="10" fill="#6b4fa1"/>
+              <circle cx="0" cy="-7" r="6.5" fill="#6b4fa1"/>
+              <path d="M -6 -12 L -4 -18 L -1 -13 Z" fill="#6b4fa1"/>
+              <path d="M 6 -12 L 4 -18 L 1 -13 Z" fill="#6b4fa1"/>
+              <circle cx="-2.5" cy="-7" r="1.3" fill="#ffffff"/>
+              <circle cx="2.5" cy="-7" r="1.3" fill="#ffffff"/>
+              <path d="M -2.5 -3.5 Q 0 -1.8 2.5 -3.5" stroke="#ffffff" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+            </g>
+          </g>
+          <!-- halloween: bats hanging from the sign -->
+          <g transform="translate(216,172)">
+            <g class="bat-sway">
+              <line x1="0" y1="0" x2="0" y2="12" stroke="#3a2b52" stroke-width="2.5"/>
+              <ellipse cx="0" cy="26" rx="10" ry="14" fill="#6b4fa1"/>
+              <path d="M -9 15 Q -16 28 -9 41 L -3 28 Z" fill="#54397e"/>
+              <path d="M 9 15 Q 16 28 9 41 L 3 28 Z" fill="#54397e"/>
+              <circle cx="0" cy="42" r="8.5" fill="#6b4fa1"/>
+              <path d="M -6 48 L -5 55 L -2 49 Z" fill="#6b4fa1"/>
+              <path d="M 6 48 L 5 55 L 2 49 Z" fill="#6b4fa1"/>
+              <circle cx="-3" cy="41" r="1.5" fill="#ffffff"/>
+              <circle cx="3" cy="41" r="1.5" fill="#ffffff"/>
+              <path d="M -3 46 Q 0 48 3 46" stroke="#ffffff" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+            </g>
+          </g>
+          <g transform="translate(684,172) scale(-0.9,0.9)">
+            <g class="bat-sway" style="animation-duration:4.1s">
+              <line x1="0" y1="0" x2="0" y2="12" stroke="#3a2b52" stroke-width="2.5"/>
+              <ellipse cx="0" cy="26" rx="10" ry="14" fill="#6b4fa1"/>
+              <path d="M -9 15 Q -16 28 -9 41 L -3 28 Z" fill="#54397e"/>
+              <path d="M 9 15 Q 16 28 9 41 L 3 28 Z" fill="#54397e"/>
+              <circle cx="0" cy="42" r="8.5" fill="#6b4fa1"/>
+              <path d="M -6 48 L -5 55 L -2 49 Z" fill="#6b4fa1"/>
+              <path d="M 6 48 L 5 55 L 2 49 Z" fill="#6b4fa1"/>
+              <circle cx="-3" cy="41" r="1.5" fill="#ffffff"/>
+              <circle cx="3" cy="41" r="1.5" fill="#ffffff"/>
+              <path d="M -3 46 Q 0 48 3 46" stroke="#ffffff" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+            </g>
+          </g>
+          <!-- halloween: orange + purple bunting across the garage door -->
+          <g>
+            <path d="M 140 208 Q 450 246 760 208" stroke="#3a2b52" stroke-width="3" fill="none"/>
+            <polygon points="179,214 201,214 190,235" fill="#ff8c1a"/>
+            <polygon points="234,219 256,219 245,240" fill="#7c4dbd"/>
+            <polygon points="290,223 312,223 301,244" fill="#ffd93f"/>
+            <polygon points="346,225 368,225 357,246" fill="#2f2f33"/>
+            <polygon points="402,227 424,227 413,248" fill="#ff8c1a"/>
+            <polygon points="458,227 480,227 469,248" fill="#7c4dbd"/>
+            <polygon points="513,226 535,226 524,247" fill="#ffd93f"/>
+            <polygon points="569,224 591,224 580,245" fill="#2f2f33"/>
+            <polygon points="625,220 647,220 636,241" fill="#ff8c1a"/>
+            <polygon points="681,215 703,215 692,236" fill="#7c4dbd"/>
+          </g>
+          <!-- halloween: candy on the ground -->
+          <g transform="translate(250,541)">
+            <path d="M -7 0 L -4.6 -5.5 L 4.6 -5.5 L 7 0 Z" fill="#ffd93f"/>
+            <path d="M -4.6 -5.5 L -2.2 -11 L 2.2 -11 L 4.6 -5.5 Z" fill="#ff8c1a"/>
+            <path d="M -2.2 -11 L 0 -16.5 L 2.2 -11 Z" fill="#fff7e8"/>
+          </g>
+          <g transform="translate(648,542) scale(0.9)">
+            <path d="M -7 0 L -4.6 -5.5 L 4.6 -5.5 L 7 0 Z" fill="#ffd93f"/>
+            <path d="M -4.6 -5.5 L -2.2 -11 L 2.2 -11 L 4.6 -5.5 Z" fill="#ff8c1a"/>
+            <path d="M -2.2 -11 L 0 -16.5 L 2.2 -11 Z" fill="#fff7e8"/>
+          </g>
+          <g transform="translate(430,542) scale(0.8)">
+            <path d="M -7 0 L -4.6 -5.5 L 4.6 -5.5 L 7 0 Z" fill="#ffd93f"/>
+            <path d="M -4.6 -5.5 L -2.2 -11 L 2.2 -11 L 4.6 -5.5 Z" fill="#ff8c1a"/>
+            <path d="M -2.2 -11 L 0 -16.5 L 2.2 -11 Z" fill="#fff7e8"/>
+          </g>
+          <g transform="translate(192,534)">
+            <path d="M -14 0 L -7 -5 L -7 5 Z" fill="#ffd93f"/>
+            <path d="M 14 0 L 7 -5 L 7 5 Z" fill="#ffd93f"/>
+            <circle r="7.5" fill="#ef476f"/>
+            <circle cx="-2.5" cy="-2.5" r="2.2" fill="#ffffff" opacity=".55"/>
+          </g>
+          <!-- halloween: pumpkins (built by script) -->
+          <g id="pumpkins"></g>
+
           <!-- headlight beams (in front of car) -->
           <g id="beams" opacity="0">
             <polygon points="700,428 880,398 880,474 700,452" fill="#fff6a8" opacity=".75"/>
@@ -303,6 +411,13 @@
       function sndHonk()   { tone(392, 0.22, "square", 0.16); tone(494, 0.22, "square", 0.16); }
       function sndDing(f)  { tone(f || 1180, 0.35, "sine", 0.18); tone((f || 1180) * 1.5, 0.3, "sine", 0.08, 0.02); }
       function sndSparkle(){ tone(1560, 0.12, "triangle", 0.14); tone(2090, 0.16, "triangle", 0.12, 0.06); }
+      function sndBark() {
+        for (var i = 0; i < 2; i++) {
+          tone(290, 0.11, "sawtooth", 0.16, i * 0.17, 130);
+          noiseHit(0.07, 750, 0.22, i * 0.17, 1.1);
+        }
+        tone(660, 0.14, "triangle", 0.1, 0.36);
+      }
       function sndCheer() {
         var notes = [523, 659, 784, 1047, 784, 1047];
         for (var i = 0; i < notes.length; i++) tone(notes[i], 0.22, "triangle", 0.22, i * 0.11);
@@ -324,7 +439,8 @@
       }
 
       /* ---------------- Tire artwork ---------------- */
-      var TIRE_TYPES = ["classic", "monster", "rainbow", "donut", "star"];
+      var TIRE_TYPES = ["classic", "monster", "rainbow", "donut", "star", "pbcup"];
+      var TIRE_NAMES = { classic: "classic", monster: "monster", rainbow: "rainbow", donut: "donut", star: "star", pbcup: "peanut butter cup" };
       function tireInner(type, r) {
         var s = "";
         if (type === "monster") {
@@ -343,15 +459,29 @@
           }
           s += '<circle r="' + (r * 0.2) + '" fill="#fff7e8"/>';
         } else if (type === "donut") {
+          /* halloween donut: orange frosting with bat sprinkles */
           s += '<circle r="' + r + '" fill="#e8a75c"/>';
-          s += '<circle r="' + (r * 0.8) + '" fill="#ff8fb2"/>';
-          var sprinkles = [[-0.4, -0.35, 20], [0.3, -0.5, -30], [0.5, 0.15, 60], [-0.15, 0.45, -50], [-0.55, 0.2, 10], [0.1, -0.1, 80], [0.42, -0.18, -70], [-0.3, -0.62, 40]];
-          var scol = ["#ffffff", "#3fa7d6", "#ffd93f", "#6bcb77", "#ef476f"];
-          for (var k = 0; k < sprinkles.length; k++) {
-            s += '<rect x="' + (sprinkles[k][0] * r - r * 0.11) + '" y="' + (sprinkles[k][1] * r - r * 0.045) + '" width="' + (r * 0.22) + '" height="' + (r * 0.09) + '" rx="' + (r * 0.045) + '" fill="' + scol[k % scol.length] + '" transform="rotate(' + sprinkles[k][2] + ' ' + (sprinkles[k][0] * r) + ' ' + (sprinkles[k][1] * r) + ')"/>';
+          s += '<circle r="' + (r * 0.8) + '" fill="#ff8c1a"/>';
+          var BAT = "M -7 0 Q -4.6 -5 -1.6 -1.9 Q -0.8 -3.4 0 -3.6 Q 0.8 -3.4 1.6 -1.9 Q 4.6 -5 7 0 Q 4.2 1.7 1.9 0.7 Q 1 1.8 0 2 Q -1 1.8 -1.9 0.7 Q -4.2 1.7 -7 0 Z";
+          var bats = [[-0.42, -0.3, 15], [0.34, -0.42, -20], [0.52, 0.12, 40], [-0.2, 0.5, -35], [-0.56, 0.14, 25], [0.08, -0.58, 60], [0.44, -0.14, -55], [-0.34, 0.28, 70]];
+          for (var k = 0; k < bats.length; k++) {
+            s += '<path d="' + BAT + '" fill="#3b2a4d" transform="translate(' + (bats[k][0] * r).toFixed(1) + ' ' + (bats[k][1] * r).toFixed(1) + ') rotate(' + bats[k][2] + ') scale(' + (r * 0.024).toFixed(3) + ')"/>';
           }
           s += '<circle r="' + (r * 0.3) + '" fill="#8a5a2b"/>';
           s += '<circle r="' + (r * 0.3) + '" fill="none" stroke="#6e4520" stroke-width="' + (r * 0.06) + '"/>';
+        } else if (type === "pbcup") {
+          /* peanut butter cup: fluted brown cup, orange wrapper ring, pb swirl */
+          for (var f2 = 0; f2 < 16; f2++) {
+            var fa = f2 * 22.5 * Math.PI / 180;
+            s += '<circle cx="' + (Math.cos(fa) * r * 0.9).toFixed(1) + '" cy="' + (Math.sin(fa) * r * 0.9).toFixed(1) + '" r="' + (r * 0.17) + '" fill="#5d3a1a"/>';
+          }
+          s += '<circle r="' + (r * 0.93) + '" fill="#5d3a1a"/>';
+          s += '<circle r="' + (r * 0.8) + '" fill="#ff7b1c"/>';
+          s += '<circle r="' + (r * 0.64) + '" fill="#7a4a21"/>';
+          s += '<circle r="' + (r * 0.42) + '" fill="#8a5a2b"/>';
+          s += '<circle r="' + (r * 0.3) + '" fill="#d99a4e"/>';
+          s += '<circle r="' + (r * 0.18) + '" fill="#7a4a21"/>';
+          s += '<circle r="' + (r * 0.08) + '" fill="#d99a4e"/>';
         } else if (type === "star") {
           s += '<circle r="' + r + '" fill="#2f3542"/>';
           s += '<circle r="' + (r * 0.8) + '" fill="#57606f"/>';
@@ -452,6 +582,45 @@
         '<rect x="-268" y="402" width="15" height="19" rx="6" fill="#ff5a5a"/>';
       }
 
+      /* Tuna the puppy, in his chicken costume, driving every car.
+         Drawn in car-local coords; (x, y) is his head center inside the
+         driver window and the clip keeps him inside that window. */
+      var DRIVERS = {
+        sedan: { x: 58, y: 340, s: 0.62, clip: '<path d="M -12 308 L 56 308 Q 84 308 102 326 L 146 368 L -12 368 Z"/>' },
+        truck: { x: -28, y: 330, s: 0.55, clip: '<path d="M -104 300 L -2 300 Q 10 300 20 312 L 62 356 L -104 356 Z"/>' },
+        race:  { x: 56, y: 348, s: 0.58, clip: '<path d="M -18 318 L 58 318 Q 80 318 96 332 L 140 374 L -18 374 Z"/>' },
+        bus:   { x: 232, y: 348, s: 0.58, clip: '<rect x="206" y="306" width="52" height="86" rx="9"/>' },
+        van:   { x: 170, y: 340, s: 0.5, clip: '<path d="M 142 306 L 176 330 Q 196 346 210 366 L 142 366 Z"/>' }
+      };
+      var TUNA_ART =
+        '<g class="tuna-tail"><path d="M -18 14 Q -33 8 -34 -9 Q -26 1 -17 3 Z" fill="#2b2b30"/><circle cx="-34" cy="-10" r="5.5" fill="#f7f3ea"/></g>' +
+        '<ellipse cx="1" cy="35" rx="21" ry="15" fill="#f7f3ea"/>' +
+        '<ellipse cx="-13" cy="30" rx="8" ry="11" fill="#2b2b30"/>' +
+        '<ellipse cx="20" cy="31" rx="8" ry="6" fill="#f7f3ea"/>' +
+        '<circle cx="0" cy="-3" r="31" fill="#f7f3ea"/>' +
+        '<circle cx="-27" cy="-14" r="6" fill="#f7f3ea"/><circle cx="-20" cy="-25" r="6" fill="#f7f3ea"/><circle cx="-9" cy="-31" r="6" fill="#f7f3ea"/><circle cx="4" cy="-32" r="6" fill="#f7f3ea"/><circle cx="16" cy="-27" r="6" fill="#f7f3ea"/><circle cx="25" cy="-18" r="6" fill="#f7f3ea"/>' +
+        '<circle cx="0" cy="0" r="26" fill="#2b2b30"/>' +
+        '<circle cx="-21" cy="-13" r="7" fill="#2b2b30"/><circle cx="21" cy="-14" r="7" fill="#2b2b30"/><circle cx="-24" cy="5" r="7" fill="#2b2b30"/><circle cx="25" cy="3" r="7" fill="#2b2b30"/>' +
+        '<ellipse cx="1" cy="11" rx="16" ry="11" fill="#f7f3ea"/>' +
+        '<path d="M 0 20 L 3 26 L 6 20 Z M 8 20 L 11 26 L 14 20 Z" fill="#f7f3ea"/>' +
+        '<ellipse cx="1" cy="7" rx="7" ry="5.5" fill="#17171a"/>' +
+        '<circle cx="-1" cy="5" r="1.8" fill="#ffffff"/>' +
+        '<path d="M -4 15 Q 1 18 6 15" stroke="#8d8578" stroke-width="1.8" fill="none" stroke-linecap="round"/>' +
+        '<circle cx="-9" cy="-5" r="3.6" fill="#17171a"/><circle cx="11" cy="-5" r="3.6" fill="#17171a"/>' +
+        '<circle cx="-10" cy="-6.2" r="1.3" fill="#ffffff"/><circle cx="10" cy="-6.2" r="1.3" fill="#ffffff"/>' +
+        '<circle cx="-17" cy="6" r="4" fill="#ffb3c1" opacity=".75"/><circle cx="19" cy="6" r="4" fill="#ffb3c1" opacity=".75"/>' +
+        '<path d="M -24 -10 A 26 26 0 0 1 25 -12" stroke="#f7f3ea" stroke-width="7" fill="none" stroke-linecap="round"/>' +
+        '<circle cx="-27" cy="2" r="6.5" fill="#f7f3ea"/><circle cx="28" cy="0" r="6.5" fill="#f7f3ea"/>' +
+        '<g fill="#e33224"><circle cx="-11" cy="-33" r="6.5"/><circle cx="0" cy="-37" r="7.5"/><circle cx="11" cy="-33" r="6.5"/><ellipse cx="0" cy="-28" rx="13" ry="5"/></g>' +
+        '<path d="M 17 -25 Q 30 -27 33 -19 Q 30 -12 18 -15 Q 15 -20 17 -25 Z" fill="#ffc93f"/>' +
+        '<path d="M 24 -12 Q 29 -5 24 0 Q 19 -6 24 -12 Z" fill="#e33224"/>';
+      function tunaDriver(type) {
+        var d = DRIVERS[type];
+        if (!d) return "";
+        return '<defs><clipPath id="tunaClip">' + d.clip + '</clipPath></defs>' +
+          '<g clip-path="url(#tunaClip)"><g transform="translate(' + d.x + ',' + d.y + ') scale(' + d.s + ')"><g class="tunaInner">' + TUNA_ART + "</g></g></g>";
+      }
+
       /* Wheel slots in car-local coords: [farRear, farFront, nearRear, nearFront] */
       var SLOTS = [
         { x: -184, y: WHEEL_Y - 20, r: WHEEL_R * 0.8, far: true },
@@ -462,6 +631,7 @@
       var CAR_CX = 450; /* scene x of car center */
 
       var hubs = [];      /* {occupied, type, swapped, tireG, ringG, slot} */
+      var currentDriver = null;
       var busy = false;
       var hintTimer = null;
       var lastCarIdx = -1, lastColorIdx = -1;
@@ -484,7 +654,8 @@
             '<g class="ringG" style="display:none"><circle class="hub-ring" r="' + (sf.r + 10) + '" fill="none" stroke="#ffd93f" stroke-width="7" stroke-dasharray="12 10"/></g>' +
             '<g class="tireG">' + tireInner(startType, sf.r) + '<circle r="' + sf.r + '" fill="rgba(0,0,0,0.28)"/></g></g>';
         }
-        html += '<g id="bodyG">' + carBody(def.type, color) + "</g>";
+        html += '<g id="bodyG">' + carBody(def.type, color) + tunaDriver(def.type) + "</g>";
+        currentDriver = DRIVERS[def.type] || null;
         /* near wheels over body bottom */
         for (var n = 2; n < 4; n++) {
           var sn = SLOTS[n];
@@ -503,6 +674,9 @@
         }
         /* body tap target (honk) */
         hits += '<rect id="bodyHit" x="' + (CAR_CX - 250) + '" y="290" width="500" height="180" fill="rgba(0,0,0,0)"/>';
+        /* Tuna tap target (bark) */
+        var drv = DRIVERS[def.type];
+        if (drv) hits += '<circle id="tunaHit" role="button" tabindex="0" aria-label="Tuna the puppy" cx="' + (CAR_CX + drv.x) + '" cy="' + drv.y + '" r="46" fill="rgba(0,0,0,0)"/>';
         hitsG.innerHTML = hits;
         /* Keyboard / switch access: Enter or Space on a focused wheel pops or
            wiggles exactly like a tap on that wheel. */
@@ -514,6 +688,10 @@
             });
           })(k);
         }
+        var tunaHitEl = document.getElementById("tunaHit");
+        if (tunaHitEl) tunaHitEl.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onTunaTap(); }
+        });
 
         hubs = [];
         var wheelGs = carG.querySelectorAll(".wheelG");
@@ -531,6 +709,7 @@
            relying on which circle happens to be on top. */
         hitsG.onpointerdown = function (e) {
           e.preventDefault(); audio();
+          if (e.target && e.target.id === "tunaHit") { onTunaTap(); return; }
           if (busy) return;
           if (e.target && e.target.id === "bodyHit") { sndHonk(); bounceBody(); return; }
           var pick = pickHub(e.clientX, e.clientY);
@@ -567,6 +746,21 @@
       }
 
       /* ---------------- Core loop ---------------- */
+      function onTunaTap() {
+        audio();
+        sndBark();
+        var inner = carG.querySelector(".tunaInner");
+        if (inner && inner.animate) {
+          inner.animate([
+            { transform: "scale(1,1)" },
+            { transform: "scale(1.1,0.88)", offset: 0.3 },
+            { transform: "scale(0.94,1.1)", offset: 0.6 },
+            { transform: "scale(1,1)" }
+          ], { duration: 420, easing: "ease-out" });
+        }
+        if (currentDriver) sparkleAt(CAR_CX + currentDriver.x, currentDriver.y - 10);
+      }
+
       function onHubTap(i) {
         audio();
         if (busy) return;
@@ -720,7 +914,7 @@
         TIRE_TYPES.forEach(function (type) {
           var btn = document.createElement("button");
           btn.className = "rack-btn";
-          btn.setAttribute("aria-label", type + " tire");
+          btn.setAttribute("aria-label", (TIRE_NAMES[type] || type) + " tire");
           btn.innerHTML = tireSVGString(type, 100);
           btn.addEventListener("pointerdown", function (e) {
             e.preventDefault();
@@ -872,7 +1066,7 @@
         }
       }
       function confetti() {
-        var cols = ["#ef476f", "#ffd93f", "#3fa7d6", "#6bcb77", "#ff9f1c", "#ff6b4a"];
+        var cols = ["#ef476f", "#ffd93f", "#3fa7d6", "#6bcb77", "#ff8c1a", "#7c4dbd"];
         var r = stage.getBoundingClientRect();
         for (var i = 0; i < 42; i++) {
           var c = document.createElement("div");
@@ -926,6 +1120,58 @@
           { transform: "rotate(10deg)", transformOrigin: "94px 540px" },
           { transform: "rotate(0deg)", transformOrigin: "94px 540px" }
         ], { duration: 420 });
+      });
+      /* Pumpkins: friendly jack-o'-lanterns that bounce and glow when tapped */
+      var PUMPKIN_SPOTS = [
+        { x: 150, y: 542, s: 1.1 },
+        { x: 722, y: 542, s: 0.68 },
+        { x: 766, y: 542, s: 0.95 },
+        { x: 300, y: 86, s: 0.55 }
+      ];
+      function pumpkinArt() {
+        return '<ellipse class="pglow" cx="0" cy="-22" rx="37" ry="31" fill="#ffca3a" opacity="0"/>' +
+          '<ellipse cx="-15" cy="-21" rx="15" ry="20" fill="#f97d0e"/>' +
+          '<ellipse cx="15" cy="-21" rx="15" ry="20" fill="#f97d0e"/>' +
+          '<ellipse cx="0" cy="-22" rx="17" ry="22" fill="#ff8c1a"/>' +
+          '<path d="M -8 -43 Q -10 -22 -8 -2" stroke="#e06f00" stroke-width="2.5" fill="none"/>' +
+          '<path d="M 8 -43 Q 10 -22 8 -2" stroke="#e06f00" stroke-width="2.5" fill="none"/>' +
+          '<path d="M -2 -43 C -3 -50 1 -54 7 -54 C 6 -49 4 -45 2 -42 Z" fill="#5e8c31"/>' +
+          '<g class="pface" fill="#7a3c00"><circle cx="-7" cy="-27" r="3.2"/><circle cx="7" cy="-27" r="3.2"/></g>' +
+          '<path class="psmile" d="M -8 -17 Q 0 -10 8 -17" stroke="#7a3c00" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
+          '<rect x="-32" y="-56" width="64" height="58" fill="transparent"/>';
+      }
+      var pumpkinsG = document.getElementById("pumpkins");
+      var pkHTML = "";
+      PUMPKIN_SPOTS.forEach(function (p) {
+        pkHTML += '<g class="pumpkin" data-cx="' + p.x + '" data-cy="' + p.y + '" transform="translate(' + p.x + ',' + p.y + ') scale(' + p.s + ')" style="cursor:pointer"><g class="pumpkinInner">' + pumpkinArt() + "</g></g>";
+      });
+      pumpkinsG.innerHTML = pkHTML;
+      document.querySelectorAll(".pumpkin").forEach(function (pk) {
+        pk.addEventListener("pointerdown", function (e) {
+          e.preventDefault(); audio();
+          sndDing(500 + Math.random() * 120);
+          var inner = pk.querySelector(".pumpkinInner");
+          if (inner && inner.animate) {
+            inner.animate([
+              { transform: "scale(1,1) rotate(0deg)" },
+              { transform: "scale(1.14,0.82) rotate(-3deg)", offset: 0.3 },
+              { transform: "scale(0.94,1.1) rotate(2deg)", offset: 0.6 },
+              { transform: "scale(1,1) rotate(0deg)" }
+            ], { duration: 480, easing: "ease-out" });
+          }
+          var glow = pk.querySelector(".pglow");
+          var face = pk.querySelector(".pface");
+          var smile = pk.querySelector(".psmile");
+          if (glow) glow.setAttribute("opacity", "0.55");
+          if (face) face.setAttribute("fill", "#ffd23f");
+          if (smile) smile.setAttribute("stroke", "#ffd23f");
+          setTimeout(function () {
+            if (glow) glow.setAttribute("opacity", "0");
+            if (face) face.setAttribute("fill", "#7a3c00");
+            if (smile) smile.setAttribute("stroke", "#7a3c00");
+          }, 900);
+          sparkleAt(parseFloat(pk.getAttribute("data-cx")), parseFloat(pk.getAttribute("data-cy")) - 26);
+        });
       });
       document.getElementById("pump").addEventListener("pointerdown", function (e) {
         e.preventDefault(); audio(); sndDing(660);
