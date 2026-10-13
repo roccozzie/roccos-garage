@@ -86,6 +86,58 @@
         text-shadow: 0 6px 0 #e2571e, 0 12px 24px rgba(0,0,0,.25);
         letter-spacing: 2px;
       }
+      /* Tuna's WOOF! speech bubble */
+      #woof {
+        position: absolute;
+        left: 0;
+        top: 0;
+        transform: translate(-50%, -115%) scale(0);
+        background: #ffffff;
+        color: #e2571e;
+        border: 4px solid #e2571e;
+        border-radius: 999px;
+        padding: 4px 18px 7px;
+        font-weight: 800;
+        font-size: clamp(26px, 6vw, 44px);
+        line-height: 1.1;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        z-index: 8;
+      }
+      #woof::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: -14px;
+        transform: translateX(-50%);
+        border: 7px solid transparent;
+        border-top: 11px solid #e2571e;
+        border-bottom: 0;
+      }
+      /* Big next-car button */
+      #nextCarBtn {
+        position: absolute;
+        right: calc(12px + env(safe-area-inset-right));
+        bottom: 12px;
+        width: clamp(80px, 17vw, 114px);
+        height: clamp(80px, 17vw, 114px);
+        border-radius: 50%;
+        border: none;
+        background: #fff7e8;
+        padding: 11px;
+        cursor: pointer;
+        box-shadow: 0 6px 0 #d98a16, 0 10px 18px rgba(0,0,0,.25);
+        z-index: 9;
+        touch-action: none;
+        animation: nextPulse 1.8s ease-in-out infinite;
+      }
+      #nextCarBtn:active { transform: translateY(4px); box-shadow: 0 2px 0 #d98a16, 0 5px 10px rgba(0,0,0,.22); animation: none; }
+      #nextCarBtn svg { width: 100%; height: 100%; display: block; pointer-events: none; }
+      @keyframes nextPulse {
+        0%,100% { box-shadow: 0 6px 0 #d98a16, 0 10px 18px rgba(0,0,0,.25), 0 0 0 0 rgba(255,157,28,.45); }
+        50% { box-shadow: 0 6px 0 #d98a16, 0 10px 18px rgba(0,0,0,.25), 0 0 0 15px rgba(255,157,28,0); }
+      }
       /* Tire rack */
       #rack {
         flex: 0 0 auto;
@@ -139,7 +191,7 @@
       @keyframes flapL { from { transform: rotate(8deg); } to { transform: rotate(-16deg); } }
       @keyframes flapR { from { transform: rotate(-8deg); } to { transform: rotate(16deg); } }
       @media (prefers-reduced-motion: reduce) {
-        .cloud, .hub-ring, .wiggle-hint, .tuna-tail, .bat-sway, .bat-bob, .wingL, .wingR { animation: none; }
+        .cloud, .hub-ring, .wiggle-hint, .tuna-tail, .bat-sway, .bat-bob, .wingL, .wingR, #nextCarBtn { animation: none; }
       }
     </style>
   </head>
@@ -355,6 +407,19 @@
         </svg>
         <div id="fx"></div>
         <div id="yay">YAY!</div>
+        <div id="woof" aria-hidden="true">WOOF!</div>
+        <button id="nextCarBtn" type="button" aria-label="Next car">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <path d="M 8 62 L 8 48 Q 8 41 16 39 L 23 30 Q 26 25 33 25 L 45 25 Q 52 25 56 30 L 63 39 Q 70 41 70 48 L 70 62 Z" fill="#e2571e"/>
+            <path d="M 27 39 L 32 31 Q 33 29 36 29 L 38 29 L 38 39 Z" fill="#bdeaff"/>
+            <path d="M 42 29 L 45 29 Q 50 29 53 32 L 58 39 L 42 39 Z" fill="#bdeaff"/>
+            <circle cx="24" cy="62" r="7.5" fill="#2f3542"/>
+            <circle cx="24" cy="62" r="3" fill="#dfe6ee"/>
+            <circle cx="55" cy="62" r="7.5" fill="#2f3542"/>
+            <circle cx="55" cy="62" r="3" fill="#dfe6ee"/>
+            <polygon points="62,72 78,72 78,65 94,79 78,93 78,86 62,86" fill="#ff9f1c" stroke="#e2571e" stroke-width="2.5" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
       <div id="rack" aria-label="Tire rack"></div>
     </div>
@@ -412,11 +477,14 @@
       function sndDing(f)  { tone(f || 1180, 0.35, "sine", 0.18); tone((f || 1180) * 1.5, 0.3, "sine", 0.08, 0.02); }
       function sndSparkle(){ tone(1560, 0.12, "triangle", 0.14); tone(2090, 0.16, "triangle", 0.12, 0.06); }
       function sndBark() {
+        /* happy double bark: "woof woof" - two short, loud, throaty bursts */
         for (var i = 0; i < 2; i++) {
-          tone(290, 0.11, "sawtooth", 0.16, i * 0.17, 130);
-          noiseHit(0.07, 750, 0.22, i * 0.17, 1.1);
+          var d = i * 0.21;
+          tone(330, 0.13, "sawtooth", 0.34, d, 115);
+          tone(165, 0.13, "square", 0.2, d, 85);
+          noiseHit(0.09, 850, 0.32, d, 0.9);
         }
-        tone(660, 0.14, "triangle", 0.1, 0.36);
+        tone(720, 0.12, "triangle", 0.1, 0.45);
       }
       function sndCheer() {
         var notes = [523, 659, 784, 1047, 784, 1047];
@@ -663,9 +731,10 @@
         }
         /* body tap target (honk) */
         hits += '<rect id="bodyHit" x="' + (CAR_CX - 250) + '" y="290" width="500" height="180" fill="rgba(0,0,0,0)"/>';
-        /* Tuna tap target (bark) */
+        /* Tuna tap target (bark): the whole driver window area, generously
+           padded, so toddler taps land on him */
         var drv = DRIVERS[def.type];
-        if (drv) hits += '<circle id="tunaHit" role="button" tabindex="0" aria-label="Tuna the puppy" cx="' + (CAR_CX + drv.x) + '" cy="' + drv.y + '" r="46" fill="rgba(0,0,0,0)"/>';
+        if (drv) hits += '<rect id="tunaHit" role="button" tabindex="0" aria-label="Tuna the puppy" x="' + (CAR_CX + drv.x - 82) + '" y="' + (drv.y - 70) + '" width="164" height="142" rx="26" fill="rgba(0,0,0,0)"/>';
         hitsG.innerHTML = hits;
         /* Keyboard / switch access: Enter or Space on a focused wheel pops or
            wiggles exactly like a tap on that wheel. */
@@ -735,17 +804,42 @@
       }
 
       /* ---------------- Core loop ---------------- */
+      var woofEl = document.getElementById("woof");
+      var woofAnim = null;
+      function showWoof() {
+        if (!currentDriver || !woofEl) return;
+        var r = stage.getBoundingClientRect();
+        var pt = scene.createSVGPoint();
+        pt.x = CAR_CX + currentDriver.x;
+        pt.y = currentDriver.y - 62;
+        var p = pt.matrixTransform(scene.getScreenCTM());
+        woofEl.style.left = (p.x - r.left) + "px";
+        woofEl.style.top = (p.y - r.top) + "px";
+        if (woofAnim) woofAnim.cancel();
+        if (woofEl.animate) {
+          woofAnim = woofEl.animate([
+            { transform: "translate(-50%,-115%) scale(0) rotate(-9deg)", opacity: 0 },
+            { transform: "translate(-50%,-128%) scale(1.18) rotate(3deg)", opacity: 1, offset: 0.32 },
+            { transform: "translate(-50%,-120%) scale(1) rotate(0deg)", opacity: 1, offset: 0.55 },
+            { transform: "translate(-50%,-120%) scale(1)", opacity: 1, offset: 0.8 },
+            { transform: "translate(-50%,-134%) scale(0.65)", opacity: 0 }
+          ], { duration: 1000, easing: "ease-out", fill: "forwards" });
+        }
+      }
+
       function onTunaTap() {
         audio();
         sndBark();
+        showWoof();
         var inner = carG.querySelector(".tunaInner");
         if (inner && inner.animate) {
           inner.animate([
             { transform: "scale(1,1)" },
-            { transform: "scale(1.1,0.88)", offset: 0.3 },
-            { transform: "scale(0.94,1.1)", offset: 0.6 },
+            { transform: "scale(1.26,0.72)", offset: 0.28 },
+            { transform: "scale(0.86,1.22)", offset: 0.58 },
+            { transform: "scale(1.08,0.94)", offset: 0.8 },
             { transform: "scale(1,1)" }
-          ], { duration: 420, easing: "ease-out" });
+          ], { duration: 540, easing: "ease-out" });
         }
         if (currentDriver) sparkleAt(CAR_CX + currentDriver.x, currentDriver.y - 10);
       }
@@ -895,6 +989,53 @@
         hitsG.style.display = "";
         rollIn(document.getElementById("carBody"));
       }
+
+      /* ---------------- Switch cars (swipe or big button) ---------------- */
+      /* Sends the current car off happily and rolls the next one in, no
+         matter how far the tire swapping got. buildCar() rebuilds all
+         state, so a half-swapped car can never get anything stuck. */
+      function switchCar() {
+        if (busy) return;
+        busy = true;
+        stopHint();
+        if (dragState) { dragState.ghost.remove(); dragState = null; }
+        sndHonk();
+        setTimeout(sndHonk, 230);
+        flashLights();
+        driveOff();
+      }
+
+      /* Horizontal swipe anywhere on the garage scene switches cars.
+         Only drags that START on the scene count: a rack-tire drag starts
+         on a rack button (outside #stage), so the two never fight. Drags
+         starting on a wheel (which pop it off) or on Tuna (who barks) are
+         taps, not swipes. */
+      var swipeState = null;
+      stage.addEventListener("pointerdown", function (e) {
+        var t = e.target;
+        var onWheel = !!(t && t.classList && t.classList.contains("hit"));
+        var onTuna = !!(t && t.id === "tunaHit");
+        var onBtn = !!(t && t.closest && t.closest("#nextCarBtn"));
+        swipeState = { id: e.pointerId, x: e.clientX, y: e.clientY, ok: !(onWheel || onTuna || onBtn), done: false };
+      });
+      window.addEventListener("pointermove", function (e) {
+        if (!swipeState || swipeState.done || e.pointerId !== swipeState.id) return;
+        var dx = e.clientX - swipeState.x;
+        var dy = e.clientY - swipeState.y;
+        if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.25) {
+          swipeState.done = true;
+          if (swipeState.ok) { audio(); switchCar(); }
+        }
+      });
+      function endSwipe(e) {
+        if (swipeState && e.pointerId === swipeState.id) swipeState = null;
+      }
+      window.addEventListener("pointerup", endSwipe);
+      window.addEventListener("pointercancel", endSwipe);
+
+      var nextCarBtn = document.getElementById("nextCarBtn");
+      nextCarBtn.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+      nextCarBtn.addEventListener("click", function () { audio(); switchCar(); });
 
       /* ---------------- Rack ---------------- */
       var dragState = null;
