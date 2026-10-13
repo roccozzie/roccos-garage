@@ -25,6 +25,7 @@
         font-family: "Baloo 2", "Comic Sans MS", "Chalkboard SE", system-ui, sans-serif;
         background: var(--page-bg);
         overflow: hidden;
+        overscroll-behavior: none;
         user-select: none;
         -webkit-user-select: none;
         touch-action: none;
@@ -192,6 +193,57 @@
       @keyframes flapR { from { transform: rotate(-8deg); } to { transform: rotate(16deg); } }
       @media (prefers-reduced-motion: reduce) {
         .cloud, .hub-ring, .wiggle-hint, .tuna-tail, .bat-sway, .bat-bob, .wingL, .wingR, #nextCarBtn { animation: none; }
+      }
+      /* ---- iPhone portrait: stacked layout, rack becomes a chunky 3 x 2 grid ---- */
+      @media (orientation: portrait) and (max-width: 620px) {
+        #rack {
+          display: grid;
+          grid-template-columns: repeat(3, auto);
+          grid-template-rows: repeat(2, auto);
+          justify-content: center;
+          align-content: center;
+          gap: clamp(8px, 2.6vw, 14px);
+          padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
+        }
+        .rack-btn {
+          width: clamp(76px, 25vw, 108px);
+          height: clamp(76px, 25vw, 108px);
+          padding: 8px;
+        }
+        #nextCarBtn {
+          width: clamp(78px, 20vw, 96px);
+          height: clamp(78px, 20vw, 96px);
+          bottom: 14px;
+        }
+      }
+      /* ---- iPhone landscape (short height): rack rides on the right as a 2 x 3 grid ---- */
+      @media (orientation: landscape) and (max-height: 540px) {
+        #app {
+          flex-direction: row;
+          padding-left: env(safe-area-inset-left);
+        }
+        #stage { min-width: 0; }
+        #rack {
+          display: grid;
+          grid-template-columns: repeat(2, auto);
+          grid-template-rows: repeat(3, auto);
+          justify-content: center;
+          align-content: center;
+          gap: clamp(8px, 2.2vh, 12px);
+          border-top: none;
+          border-left: 6px solid var(--rack-edge);
+          box-shadow: -6px 0 18px rgba(0,0,0,.18);
+          padding: calc(10px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) 12px;
+        }
+        .rack-btn {
+          width: clamp(64px, 17vh, 88px);
+          height: clamp(64px, 17vh, 88px);
+          padding: 6px;
+        }
+        #nextCarBtn {
+          width: clamp(72px, 21vh, 96px);
+          height: clamp(72px, 21vh, 96px);
+        }
       }
     </style>
   </head>
@@ -727,14 +779,14 @@
         /* tap targets */
         var hits = "";
         for (var h = 0; h < 4; h++) {
-          hits += '<circle class="hit" data-hub="' + h + '" role="button" tabindex="0" aria-label="tire" cx="' + (CAR_CX + SLOTS[h].x) + '" cy="' + SLOTS[h].y + '" r="72" fill="rgba(0,0,0,0)"/>';
+          hits += '<circle class="hit" data-hub="' + h + '" role="button" tabindex="0" aria-label="tire" cx="' + (CAR_CX + SLOTS[h].x) + '" cy="' + SLOTS[h].y + '" r="84" fill="rgba(0,0,0,0)"/>';
         }
         /* body tap target (honk) */
         hits += '<rect id="bodyHit" x="' + (CAR_CX - 250) + '" y="290" width="500" height="180" fill="rgba(0,0,0,0)"/>';
         /* Tuna tap target (bark): the whole driver window area, generously
            padded, so toddler taps land on him */
         var drv = DRIVERS[def.type];
-        if (drv) hits += '<rect id="tunaHit" role="button" tabindex="0" aria-label="Tuna the puppy" x="' + (CAR_CX + drv.x - 82) + '" y="' + (drv.y - 70) + '" width="164" height="142" rx="26" fill="rgba(0,0,0,0)"/>';
+        if (drv) hits += '<rect id="tunaHit" role="button" tabindex="0" aria-label="Tuna the puppy" x="' + (CAR_CX + drv.x - 88) + '" y="' + (drv.y - 78) + '" width="176" height="150" rx="26" fill="rgba(0,0,0,0)"/>';
         hitsG.innerHTML = hits;
         /* Keyboard / switch access: Enter or Space on a focused wheel pops or
            wiggles exactly like a tap on that wheel. */
